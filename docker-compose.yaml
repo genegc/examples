@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  traefik:
+    # The official v2 Traefik docker image
+    image: traefik:v2.10
+    # Enables the web UI and tells Traefik to listen to docker
+    command: 
+      - --providers.docker 
+      - --entrypoints.web.address=:80
+      - --log.level=DEBUG 
+      - --log.filePath=/logs/traefik.log
+      - --accesslog=true
+      - --accesslog.filePath=/logs/access.log
+      - --api.insecure=true 
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs/:/logs/
+
+  # whoami:
+    # Enables the web UI and tells Traefik to listen to docker
+    # A container that exposes an API to show its IP address
+    # image: traefik/whoami
+    # image: hello-world
+    # labels:
+      #- "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"        
+      # - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"        
+
+  nginx_1:
+    image: nginx:latest
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx_1.rule=Host(`nginx.localhost`)"
+      - "traefik.http.routers.nginx_1.entrypoints=web"
+
+  # p4sserver:
+  #   image: acrseeddev2.azurecr.io/prefect4seed:2.10.18b
+  #   restart: always
+  #   volumes:
+  #     - prefect_acmeisd:/root/.prefect
+  #   entrypoint: ["/opt/prefect/entrypoint.sh", "prefect", "server", "start", "--host", "0.0.0.0", "--port", "4001"]
+  #   environment:
+  #     # - PREFECT_UI_URL=https://acmeisd.seeddataplatformdemo.com
+  #     # - PREFECT_API_URL=https://acmeisd.seeddataplatformdemo.com/api
+  #     - PREFECT_UI_URL=http://p4s.localhost:4001
+  #     - PREFECT_API_URL=http://p4s.localhost:4001/api
+  #     - PREFECT_SERVER_API_HOST=0.0.0.0
+  #   ports:
+  #     - 4001:4001
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.p4sserver.rule=Host(`p4s.localhost`)"
+  #     - "traefik.http.routers.p4sserver.entrypoints=web"
+
+volumes:
+  prefect_acmeisd:
